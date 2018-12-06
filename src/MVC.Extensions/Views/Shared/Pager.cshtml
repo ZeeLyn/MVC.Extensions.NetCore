@@ -1,0 +1,116 @@
+﻿@using Microsoft.AspNetCore.Mvc.Rendering
+@using MVC.Extensions.Extensions
+@model MvcPager
+@{
+    var pageindex = Context.Request.Query("page", 1);
+    var pages = Model.Count % Model.PageSize == 0 ? Model.Count / Model.PageSize : Model.Count / Model.PageSize + 1;
+    var mid = Model.ShowMaxCount / 2 + 1;
+    var start = (long)(pageindex - mid + 1 < 1 ? 1 : pageindex - mid + 1);
+    var end = pageindex + (Model.ShowMaxCount - (pageindex - start + 1));
+    if (end > pages)
+    {
+        end = pages;
+        start = pages - Model.ShowMaxCount + 1;
+        if (start < 1)
+        {
+            start = 1;
+        }
+    }
+    if (Model.FormMethod == FormMethod.Post)
+    {
+        using (Html.BeginForm(Model.ActionName, Model.ControllerName, new { page = pageindex }, Model.FormMethod))
+        {
+            <div class=" box-footer clearfix">
+                <ul class="pagination pull-right pagination-sm no-margin">
+                    <li class="paginate_button previous@{if (pageindex <= 1)
+                                                         {
+                                                             @Html.Raw(" disabled")
+                                                         }
+                                                       }">
+
+                        <a href="#" data-action="@Html.GetUrl(Model.ActionName, Model.ControllerName, new Dictionary<string, object> {{"page", pageindex - 1 < 1 ? 1 : pageindex - 1}})" tabindex="0">@Html.Raw(Model.PreButtonText)</a>
+                    </li>
+
+                    @for (var index = start; index <= end; index++)
+                    {
+                        var curre = index == pageindex;
+                        <li class="paginate_button@{if (curre)
+                                                    {@Html.Raw(" active")
+                                                    }
+                                                  }">
+                            <a href="javascript:;" data-action="@Html.GetUrl(Model.ActionName, Model.ControllerName, new Dictionary<string, object> {{"page", index}})" tabindex="0">@index</a>
+                        </li>
+                    }
+                    <li class="paginate_button next@{if (pageindex >= pages)
+                                                     {
+                                                         @Html.Raw(" disabled")
+                                                     }
+                                                   }">
+
+                        <a href="#" data-action="@Html.GetUrl(Model.ActionName, Model.ControllerName, new Dictionary<string, object> {{"page", pageindex + 1 > pages ? pages : pageindex + 1}})" tabindex="0">@Html.Raw(Model.NextButtonText)</a>
+                    </li>
+                </ul>
+            </div>
+            if (Model.KeepParameters != null)
+            {
+                foreach (var para in Model.KeepParameters)
+                {
+                    @Html.Hidden(para.Key, para.Value);
+                }
+            }
+        }
+    }
+    else
+    {
+        if (Model.KeepParameters == null)
+        {
+            Model.KeepParameters = new Dictionary<string, object>();
+        }
+        <div class=" box-footer clearfix">
+            <ul class="pagination pull-right pagination-sm no-margin">
+                @{ if (pageindex > 1)
+                    {
+                        Model.KeepParameters.Add("page", pageindex - 1 < 1 ? 1 : pageindex - 1);
+                        <li class="paginate_button previous">
+                            <a href="@Html.GetUrl(Model.ActionName, Model.ControllerName, Model.KeepParameters)" tabindex="0">@Html.Raw(Model.PreButtonText)</a>
+                        </li>
+                    }
+                    else
+                    {
+                        <li class="paginate_button previous disabled">
+                            <a href="javascript:/" tabindex="0">@Html.Raw(Model.PreButtonText)</a>
+                        </li>
+                    }
+                }
+                @for (var index = start; index <= end; index++)
+                {
+                    Model.KeepParameters.Remove("page");
+                    Model.KeepParameters.Add("page", index);
+
+                    var curre = index == pageindex;
+
+                    <li class="paginate_button@{if (curre)
+                        {@Html.Raw(" active") } }">
+                        <a href="@Html.GetUrl(Model.ActionName, Model.ControllerName, Model.KeepParameters)" tabindex="0">@index</a>
+                    </li>
+                }
+                @{ if (pageindex >= pages)
+                    {
+                        <li class="paginate_button next disabled">
+                            <a href="javascript:;" tabindex="0">@Html.Raw(Model.NextButtonText)</a>
+                        </li>
+                    }
+                    else
+                    {
+                        Model.KeepParameters.Remove("page");
+                        Model.KeepParameters.Add("page", pageindex + 1 > pages ? pages : pageindex + 1);
+
+                        <li class="paginate_button next">
+                            <a href="@Html.GetUrl(Model.ActionName, Model.ControllerName, Model.KeepParameters)" tabindex="0">@Html.Raw(Model.NextButtonText)</a>
+                        </li>
+                    }
+                }
+            </ul>
+        </div>
+    }
+}

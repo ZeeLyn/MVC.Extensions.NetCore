@@ -1,0 +1,16 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+@using MVC.Extensions.Extensions
+
+@Html.Paging("index", "home", 20, 100, 10)
+
+
+@{
+    if (Context.User.Identity.IsAuthenticated)
+    {
+        <text>  Hello,</text>@ViewBag.UserName
+
+
+            }
+}
